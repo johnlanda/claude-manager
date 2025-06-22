@@ -8,13 +8,13 @@ A production-ready multi-agent system for coordinating multiple Claude Code inst
 cd claude-manager
 
 # Start all agents with one command
-./start-agents-improved.sh
+./start-agents.sh
 
 # In the coordinator window, start a workflow:
 # Type: start workflow: ["Create a REST API", "Add authentication", "Include tests"]
 
 # Monitor progress (in another terminal)
-./start-agents-improved.sh monitor
+./start-agents.sh monitor
 
 # Stop all agents
 ./stop-agents.sh
@@ -29,7 +29,6 @@ claude-manager/
 ├── agent_prompts.py           # Agent role definitions and prompts
 ├── workflow_monitor.py        # Real-time monitoring with timeout detection
 ├── agent-coordinator.py       # Original coordinator (legacy)
-├── IMPROVEMENTS.md           # Detailed improvement documentation
 └── logs/                     # Agent output logs (created at runtime)
 ```
 
@@ -43,18 +42,25 @@ claude-manager/
 
 ## ✨ Key Features
 
-- **Thread-safe communication** via locked state file
-- **Automatic retry** on agent failures (2x max)
-- **Timeout detection** (5-10 minutes per agent)
-- **Comprehensive logging** to `logs/` directory
-- **Clean process management** with PID tracking
-- **Dependency auto-installation**
+### Core Capabilities
+- **Thread-safe State Management**: File locking prevents race conditions
+- **Automatic Recovery**: Failed agents retry up to 2 times
+- **Timeout Detection**: Configurable timeouts (5-10 min per agent)
+- **Comprehensive Logging**: All output saved to `logs/` directory
+- **Clean Process Management**: PID tracking for reliable shutdown
+- **Dependency Auto-installation**: Checks and installs goreman if needed
+
+### Monitoring & Control
+- **Real-time Progress Tracking**: Visual status updates in terminal
+- **Workflow Summary Reports**: Get overview with `workflow_monitor.py summary`
+- **Event Logging**: Last 100 events tracked for debugging
+- **Error Tracking**: Automatic error capture and reporting
 
 ## 🔧 Advanced Usage
 
 ### Test the System
 ```bash
-./start-agents-improved.sh test
+./start-agents.sh test
 ```
 
 ### View Current State
@@ -75,7 +81,6 @@ python3 workflow_monitor.py summary
 ## 📚 Documentation
 
 - `README-multiagent.md` - Original design documentation
-- `IMPROVEMENTS.md` - Detailed improvement notes
 - `agent-templates.md` - Agent prompt templates
 - `example-workflow.md` - Example workflow walkthrough
 
@@ -83,20 +88,66 @@ python3 workflow_monitor.py summary
 
 ### Change Claude Model
 ```bash
-export CLAUDE_MODEL=claude-3-opus-20240229
-./start-agents-improved.sh
+# Use different models for different agents based on their needs
+export CLAUDE_MODEL=claude-3-7-sonnet-20241220  # Default for most agents
+./start-agents.sh
+
+# Or use the latest Opus 4 for maximum capability
+export CLAUDE_MODEL=claude-opus-4-20250514
+./start-agents.sh
 ```
 
 ### Modify Agent Prompts
 Edit `agent_prompts.py` to customize agent behaviors.
 
 ### Adjust Timeouts
-Edit `workflow_monitor.py` to change agent timeout values.
+Edit `workflow_monitor.py` to change agent timeout values:
+```python
+self.agent_timeouts = {
+    "planner": 300,      # 5 minutes
+    "test_writer": 300,  # 5 minutes  
+    "coder": 600,        # 10 minutes
+    "reviewer": 300      # 5 minutes
+}
+```
+
+## 🔧 Architecture Benefits
+
+1. **Modularity**: Each component is independent and replaceable
+2. **Reliability**: Automatic recovery from failures with retry logic
+3. **Observability**: Comprehensive logging and event tracking
+4. **Extensibility**: Easy to add new agents or modify workflows
+5. **Performance**: Efficient state management without polling
 
 ## 📈 Future Enhancements
 
-See `IMPROVEMENTS.md` for planned features including:
-- Message queue integration
-- Web dashboard
-- Distributed execution
-- Workflow templates
+### Planned Features
+- **Message Queue Integration**: Replace file-based communication with Redis/RabbitMQ
+- **Web Dashboard**: Real-time visualization of workflow progress
+- **Distributed Execution**: Run agents across multiple machines
+- **Workflow Templates**: Reusable patterns for common tasks
+- **Cost Tracking**: Monitor token usage per workflow
+
+### Security Roadmap
+- Agent authentication and authorization
+- Encrypted inter-agent communication
+- Audit logging for compliance
+- Role-based access control
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Agents not starting**: 
+- Ensure Claude Code CLI is installed
+- Check `claude --version` works
+- Verify Python 3 is available
+
+**State conflicts**:
+- Run `python3 -c "from state_manager import StateManager; StateManager().start_new_workflow([], 'reset')"`
+- Delete `agent-state.json.lock` if it exists
+
+**Performance issues**:
+- Adjust sleep delays in `start-agents-improved.sh`
+- Reduce retry counts in `workflow_monitor.py`
+- Check system resources with `top` or `htop`
