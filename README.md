@@ -1,153 +1,168 @@
-# Claude Manager - Multi-Agent Development System
+# Simple Agents - Minimal Sequential AI Workflow
 
-A production-ready multi-agent system for coordinating multiple Claude Code instances to work together on software development tasks following a plan → test → code → review workflow.
+A clean, minimal implementation of a multi-agent AI system using Claude Code CLI. Four specialized agents work together sequentially to plan, test, code, and review software projects.
 
 ## 🚀 Quick Start
 
 ```bash
-cd claude-manager
+# Run the interactive agent system
+python3 simple_agents.py
 
-# Start all agents with one command
-./start-agents.sh
+# Give it a task
+> Build a REST API for a todo app
 
-# In the coordinator window, start a workflow:
-# Type: start workflow: ["Create a REST API", "Add authentication", "Include tests"]
+# The agents will work sequentially:
+# 1. Planner creates a detailed plan
+# 2. Test Writer writes comprehensive tests
+# 3. Coder implements the solution
+# 4. Reviewer checks everything
 
-# Monitor progress (in another terminal)
-./start-agents.sh monitor
+# Continue with more prompts without losing context
+> Add user authentication
 
-# Stop all agents
-./stop-agents.sh
+# View outputs
+> show planner
+> show          # Shows all agent outputs
+
+# Save your session
+> save
+
+# Exit when done
+> exit
 ```
 
-## 📁 Project Structure
+## 🎯 Philosophy
+
+This implementation follows the KISS (Keep It Simple, Stupid) principle:
+- **One file** - Everything in `simple_agents.py`
+- **No background processes** - Sequential execution
+- **No complex state management** - Simple in-memory context
+- **Direct Claude CLI integration** - No API complexity
+- **Clear agent roles** - Each agent has one job
+
+## 🤖 The Agents
+
+1. **Planner** - Analyzes requirements and creates detailed implementation plans
+2. **Test Writer** - Writes comprehensive tests based on the plan (TDD approach)
+3. **Coder** - Implements code that passes all the tests
+4. **Reviewer** - Reviews the implementation and suggests improvements
+
+Each agent:
+- Sees only what it needs (previous agent's output)
+- Maintains its role throughout the session
+- Produces clear, focused output
+
+## 📝 Commands
+
+| Command | Description |
+|---------|-------------|
+| `<any text>` | Run workflow with this prompt |
+| `show` | Display all agent outputs |
+| `show <agent>` | Display specific agent output (planner/tester/coder/reviewer) |
+| `save` | Save session to timestamped JSON file |
+| `exit` | Exit the program |
+
+## 🔧 Requirements
+
+- Python 3.6+
+- Claude Code CLI (`claude` command must be available)
+- Claude model access (default: claude-opus-4-20250514)
+
+## 💡 Use Cases
+
+Perfect for:
+- **Rapid Prototyping** - Get from idea to reviewed code quickly
+- **Learning** - See how different agents approach the same problem
+- **Code Generation** - Generate boilerplate with tests
+- **Architecture Design** - Use planner for system design
+- **Code Reviews** - Get AI feedback on implementations
+
+## 🎨 Example Session
 
 ```
-claude-manager/
-├── start-agents-improved.sh    # Main launcher with dependency management
-├── state_manager.py           # Thread-safe state management with file locking
-├── agent_prompts.py           # Agent role definitions and prompts
-├── workflow_monitor.py        # Real-time monitoring with timeout detection
-├── agent-coordinator.py       # Original coordinator (legacy)
-└── logs/                     # Agent output logs (created at runtime)
+🚀 Simple Agents - Sequential AI Workflow
+==================================================
+Commands:
+  <prompt>    - Run workflow with this prompt
+  show        - Show all agent outputs
+  show <agent>- Show specific agent output
+  save        - Save session to file
+  exit        - Exit the program
+==================================================
+
+> Create a Python function to calculate fibonacci numbers
+
+🤖 PLANNER is thinking...
+✅ Plan created
+
+🤖 TESTER is thinking...
+✅ Tests written
+
+🤖 CODER is thinking...
+✅ Code implemented
+
+🤖 REVIEWER is thinking...
+✅ Review complete
+
+> show coder
+
+============================================================
+📄 CODER OUTPUT:
+============================================================
+def fibonacci(n):
+    """Calculate the nth Fibonacci number."""
+    if n <= 0:
+        raise ValueError("n must be a positive integer")
+    elif n == 1:
+        return 0
+    elif n == 2:
+        return 1
+    else:
+        a, b = 0, 1
+        for _ in range(2, n):
+            a, b = b, a + b
+        return b
+============================================================
+
+> Add memoization for performance
+
+[Agents continue with the new requirement...]
 ```
 
-## 🤖 Agent Roles
+## 🔄 How It Works
 
-1. **Coordinator** - Manages workflow and user interaction
-2. **Planner** - Analyzes requirements and creates implementation plans
-3. **Test Writer** - Writes comprehensive tests (TDD approach)
-4. **Coder** - Implements code to pass all tests
-5. **Reviewer** - Reviews code quality and suggests improvements
+1. **User provides prompt** → Planner creates detailed plan
+2. **Plan goes to Test Writer** → Tests are written first (TDD)
+3. **Tests go to Coder** → Implementation that passes tests
+4. **Code + Tests go to Reviewer** → Final review and suggestions
 
-## ✨ Key Features
-
-### Core Capabilities
-- **Thread-safe State Management**: File locking prevents race conditions
-- **Automatic Recovery**: Failed agents retry up to 2 times
-- **Timeout Detection**: Configurable timeouts (5-10 min per agent)
-- **Comprehensive Logging**: All output saved to `logs/` directory
-- **Clean Process Management**: PID tracking for reliable shutdown
-- **Dependency Auto-installation**: Checks and installs goreman if needed
-
-### Monitoring & Control
-- **Real-time Progress Tracking**: Visual status updates in terminal
-- **Workflow Summary Reports**: Get overview with `workflow_monitor.py summary`
-- **Event Logging**: Last 100 events tracked for debugging
-- **Error Tracking**: Automatic error capture and reporting
-
-## 🔧 Advanced Usage
-
-### Test the System
-```bash
-./start-agents.sh test
-```
-
-### View Current State
-```bash
-python3 -m json.tool agent-state.json
-```
-
-### Watch Logs in Real-time
-```bash
-tail -f logs/*.log
-```
-
-### Get Workflow Summary
-```bash
-python3 workflow_monitor.py summary
-```
-
-## 📚 Documentation
-
-- `README-multiagent.md` - Original design documentation
-- `agent-templates.md` - Agent prompt templates
-- `example-workflow.md` - Example workflow walkthrough
+The context is preserved within each Claude session, so you can keep adding requirements and the agents will build upon previous work.
 
 ## 🛠️ Customization
 
-### Change Claude Model
-```bash
-# Use different models for different agents based on their needs
-export CLAUDE_MODEL=claude-3-7-sonnet-20241220  # Default for most agents
-./start-agents.sh
+Edit `simple_agents.py` to:
+- Change agent prompts (in the `agents` dictionary)
+- Modify the workflow order
+- Add new agents
+- Change the Claude model
 
-# Or use the latest Opus 4 for maximum capability
-export CLAUDE_MODEL=claude-opus-4-20250514
-./start-agents.sh
-```
+## 📦 Minimal Dependencies
 
-### Modify Agent Prompts
-Edit `agent_prompts.py` to customize agent behaviors.
+- Python standard library only
+- No external packages required
+- No background process management
+- No complex state files
 
-### Adjust Timeouts
-Edit `workflow_monitor.py` to change agent timeout values:
-```python
-self.agent_timeouts = {
-    "planner": 300,      # 5 minutes
-    "test_writer": 300,  # 5 minutes  
-    "coder": 600,        # 10 minutes
-    "reviewer": 300      # 5 minutes
-}
-```
+## 🤝 Contributing
 
-## 🔧 Architecture Benefits
+This is designed to be a minimal reference implementation. Feel free to:
+- Fork and extend for your needs
+- Add persistence mechanisms
+- Create parallel execution versions
+- Build web interfaces on top
 
-1. **Modularity**: Each component is independent and replaceable
-2. **Reliability**: Automatic recovery from failures with retry logic
-3. **Observability**: Comprehensive logging and event tracking
-4. **Extensibility**: Easy to add new agents or modify workflows
-5. **Performance**: Efficient state management without polling
+Keep the core simple - complexity can always be added in forks!
 
-## 📈 Future Enhancements
+## 📄 License
 
-### Planned Features
-- **Message Queue Integration**: Replace file-based communication with Redis/RabbitMQ
-- **Web Dashboard**: Real-time visualization of workflow progress
-- **Distributed Execution**: Run agents across multiple machines
-- **Workflow Templates**: Reusable patterns for common tasks
-- **Cost Tracking**: Monitor token usage per workflow
-
-### Security Roadmap
-- Agent authentication and authorization
-- Encrypted inter-agent communication
-- Audit logging for compliance
-- Role-based access control
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Agents not starting**: 
-- Ensure Claude Code CLI is installed
-- Check `claude --version` works
-- Verify Python 3 is available
-
-**State conflicts**:
-- Run `python3 -c "from state_manager import StateManager; StateManager().start_new_workflow([], 'reset')"`
-- Delete `agent-state.json.lock` if it exists
-
-**Performance issues**:
-- Adjust sleep delays in `start-agents-improved.sh`
-- Reduce retry counts in `workflow_monitor.py`
-- Check system resources with `top` or `htop`
+MIT - Use freely for any purpose.
